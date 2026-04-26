@@ -8,8 +8,11 @@ import { makeMiddleware } from './commands/make-middleware.js';
 import { makeModel } from './commands/make-model.js';
 import { makeMigration } from './commands/make-migration.js';
 import { makeAuth } from './commands/make-auth.js';
+import { makeMail } from './commands/make-mail.js';
 import { migrate } from './commands/migrate.js';
 import { dbSeed } from './commands/db-seed.js';
+import { scheduleRun } from './commands/schedule-run.js';
+import { scheduleList } from './commands/schedule-list.js';
 
 const cli = cac('rdx');
 
@@ -55,6 +58,19 @@ cli
   .option('--folder <path>', 'Seeders folder')
   .option('--only <name>', 'Run only the seeder matching this filename')
   .action((opts: { folder?: string; only?: string }) => dbSeed({ folder: opts.folder, only: opts.only }));
+
+cli
+  .command('make:mail <name>', 'Generate a Mailable class + .hbs template')
+  .option('--force', 'Overwrite if exists')
+  .action((name: string, opts: { force?: boolean }) => makeMail(name, { force: opts.force }));
+
+cli
+  .command('schedule:run', 'Start the cron scheduler')
+  .action(() => scheduleRun());
+
+cli
+  .command('schedule:list', 'List registered scheduled tasks')
+  .action(() => scheduleList());
 
 cli.help();
 cli.version('0.0.1');

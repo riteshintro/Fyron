@@ -9,6 +9,8 @@ export default defineConfig({
     'src/database/index.ts',
     'src/validation/index.ts',
     'src/auth/index.ts',
+    'src/scheduler/index.ts',
+    'src/mail/index.ts',
     'src/exceptions/index.ts',
     'src/support/index.ts',
   ],

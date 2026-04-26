@@ -23,6 +23,16 @@ export default async function createApp(): Promise<Application> {
           baseURL: process.env.BETTER_AUTH_URL ?? `http://localhost:${process.env.APP_PORT ?? 3000}`,
         },
       },
+      mail: {
+        transport: (process.env.MAIL_TRANSPORT ?? 'json') as 'smtp' | 'json' | 'stream' | 'sendmail',
+        from: process.env.MAIL_FROM,
+        host: process.env.MAIL_HOST,
+        port: process.env.MAIL_PORT ? Number(process.env.MAIL_PORT) : undefined,
+        secure: process.env.MAIL_SECURE === 'true',
+        auth: process.env.MAIL_USER && process.env.MAIL_PASS
+          ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+          : undefined,
+      },
       logging: {
         level: process.env.LOG_LEVEL ?? 'info',
       },

@@ -1,5 +1,37 @@
-APP_ENV=local
+# ───────────────────────────────────────────────────────────────────
+# __APP_NAME__ — environment configuration
+# Copy to .env and fill in real values. Never commit .env.
+# ───────────────────────────────────────────────────────────────────
+
+# Application
+APP_NAME=__APP_NAME__
+APP_ENV=local                       # local | staging | production
 APP_PORT=3000
+APP_HOST=0.0.0.0
+APP_URL=http://localhost:3000
+
+# Logging — pino level: trace|debug|info|warn|error|fatal|silent
 LOG_LEVEL=debug
 
+# Database — PostgreSQL via drizzle-orm + pg
 DATABASE_URL=postgres://user:password@localhost:5432/__APP_NAME__
+# DATABASE_POOL_MAX=10
+# DATABASE_POOL_IDLE_TIMEOUT_MS=10000
+
+# Auth — better-auth (enable via config.auth.enabled in bootstrap/app.ts)
+BETTER_AUTH_SECRET=replace-with-32-or-more-random-characters
+BETTER_AUTH_URL=http://localhost:3000
+
+# Mail — nodemailer + handlebars
+# Transport: smtp | json | stream | sendmail (json/stream are dev-only)
+MAIL_TRANSPORT=json
+MAIL_FROM="__APP_NAME__ <noreply@example.com>"
+# SMTP-only:
+# MAIL_HOST=smtp.example.com
+# MAIL_PORT=587
+# MAIL_SECURE=false
+# MAIL_USER=apikey
+# MAIL_PASS=changeme
+
+# Scheduler (cron tz; defaults to system local time if unset)
+# SCHEDULER_TIMEZONE=UTC

@@ -1,7 +1,7 @@
 import 'reflect-metadata';
 import { Application } from 'rdx';
 import { fileURLToPath } from 'node:url';
-import { dirname, resolve } from 'node:path';
+import { resolve } from 'node:path';
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const basePath = resolve(here, '..');
@@ -11,14 +11,33 @@ export default async function createApp(): Promise<Application> {
     .withConfig({
       app: {
         name: '__APP_NAME__',
-        port: Number(process.env.APP_PORT ?? 3000),
         env: process.env.APP_ENV ?? 'local',
+        port: Number(process.env.APP_PORT ?? 3000),
+        host: process.env.APP_HOST ?? '0.0.0.0',
+        url: process.env.APP_URL,
       },
       database: {
         url: process.env.DATABASE_URL,
       },
       logging: {
         level: process.env.LOG_LEVEL ?? 'info',
+      },
+      auth: {
+        enabled: false, // flip to true after `pnpm rdx make:auth` + migrate
+        options: {
+          secret: process.env.BETTER_AUTH_SECRET,
+          baseURL: process.env.BETTER_AUTH_URL,
+        },
+      },
+      mail: {
+        transport: (process.env.MAIL_TRANSPORT ?? 'json') as 'smtp' | 'json' | 'stream' | 'sendmail',
+        from: process.env.MAIL_FROM,
+        host: process.env.MAIL_HOST,
+        port: process.env.MAIL_PORT ? Number(process.env.MAIL_PORT) : undefined,
+        secure: process.env.MAIL_SECURE === 'true',
+        auth: process.env.MAIL_USER && process.env.MAIL_PASS
+          ? { user: process.env.MAIL_USER, pass: process.env.MAIL_PASS }
+          : undefined,
       },
     })
     .loadRoutesFrom(() => import('../routes/api.js'));

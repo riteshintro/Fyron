@@ -9,10 +9,14 @@ import { HttpServiceProvider } from './providers/http-service-provider.js';
 import { RoutingServiceProvider } from './providers/routing-service-provider.js';
 import { DatabaseServiceProvider } from './providers/database-service-provider.js';
 import { AuthServiceProvider } from './providers/auth-service-provider.js';
+import { SchedulerServiceProvider } from './providers/scheduler-service-provider.js';
+import { MailServiceProvider } from './providers/mail-service-provider.js';
 import { HttpKernel } from './http/kernel.js';
 import { Router } from './routing/router.js';
 import { RouteCompiler } from './routing/compiler.js';
 import type { RdxAuthInstance } from './auth/auth-config.js';
+import type { Scheduler } from './scheduler/scheduler.js';
+import type { Mailer } from './mail/mailer.js';
 
 export type ProviderClass = new (app: Application) => ServiceProvider;
 
@@ -25,8 +29,16 @@ export class Application {
   private readonly providers: ServiceProvider[] = [];
   private booted = false;
   private initialConfig: ConfigData = {};
-  private builtIns: ProviderClass[] = [HttpServiceProvider, RoutingServiceProvider, DatabaseServiceProvider, AuthServiceProvider];
+  private builtIns: ProviderClass[] = [
+    HttpServiceProvider,
+    RoutingServiceProvider,
+    DatabaseServiceProvider,
+    AuthServiceProvider,
+    SchedulerServiceProvider,
+    MailServiceProvider,
+  ];
   private routesLoader: (() => unknown | Promise<unknown>) | null = null;
+  private scheduleLoader: (() => unknown | Promise<unknown>) | null = null;
   private shutdownHooks: Array<() => unknown | Promise<unknown>> = [];
 
   constructor(basePath: string = process.cwd()) {
@@ -59,6 +71,11 @@ export class Application {
 
   loadRoutesFrom(loader: () => unknown | Promise<unknown>): this {
     this.routesLoader = loader;
+    return this;
+  }
+
+  loadScheduleFrom(loader: () => unknown | Promise<unknown>): this {
+    this.scheduleLoader = loader;
     return this;
   }
 
@@ -105,6 +122,10 @@ export class Application {
       compiler.compile(router.routes, this.httpKernel());
     }
 
+    if (this.scheduleLoader) {
+      await this.scheduleLoader();
+    }
+
     this.booted = true;
     logger.info(
       {
@@ -132,6 +153,14 @@ export class Application {
     return this.container.resolve<RdxAuthInstance>('auth');
   }
 
+  scheduler(): Scheduler {
+    return this.container.resolve<Scheduler>('scheduler');
+  }
+
+  mailer(): Mailer {
+    return this.container.resolve<Mailer>('mailer');
+  }
+
   onShutdown(fn: () => unknown | Promise<unknown>): this {
     this.shutdownHooks.push(fn);
     return this;
@@ -147,6 +176,9 @@ export class Application {
 
   async shutdown(): Promise<void> {
     if (!this.booted) return;
+    if (this.container.has('scheduler')) {
+      this.scheduler().stop();
+    }
     for (const fn of this.shutdownHooks.reverse()) {
       try { await fn(); } catch (e) { this.logger().warn({ err: e }, 'shutdown hook failed'); }
     }

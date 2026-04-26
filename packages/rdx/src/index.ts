@@ -50,6 +50,16 @@ export {
   AUTH_SCHEMA_SQL,
 } from './auth/schema.js';
 export { AuthServiceProvider } from './providers/auth-service-provider.js';
+
+export { Scheduler, type ScheduledFn, type ScheduledTask, type ScheduledTaskOptions } from './scheduler/scheduler.js';
+export { Schedule } from './scheduler/schedule.js';
+export { SchedulerServiceProvider } from './providers/scheduler-service-provider.js';
+
+export { Mailable, type RenderedMessage } from './mail/mailable.js';
+export { Mailer, type MailConfig } from './mail/mailer.js';
+export { Mail } from './mail/mail.js';
+export { MailServiceProvider } from './providers/mail-service-provider.js';
+
 export type {
   HttpMethod,
   RouteDef,
