@@ -111,17 +111,13 @@ export class Application {
       p.register();
     }
 
-    if (this.earlyMiddleware.length && this.container.has('httpKernel')) {
-      const kernel = this.httpKernel();
-      for (const mw of this.earlyMiddleware) kernel.use(mw);
-    }
-
     for (const p of this.providers) {
       await p.boot();
     }
 
-    if (this.container.has('httpKernel')) {
-      this.httpKernel().setupBodyParsing();
+    if (this.earlyMiddleware.length && this.container.has('httpKernel')) {
+      const kernel = this.httpKernel();
+      for (const mw of this.earlyMiddleware) kernel.use(mw);
     }
 
     if (this.routesLoader) {

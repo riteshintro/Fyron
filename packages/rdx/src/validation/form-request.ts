@@ -1,6 +1,5 @@
 import type { ZodSchema } from 'zod';
-import type { NextFunction } from 'express';
-import type { Middleware } from '../http/middleware.js';
+import type { Middleware, Next } from '../http/middleware.js';
 import type { Request } from '../http/request.js';
 import type { Response } from '../http/response.js';
 import { ValidationException, ForbiddenException } from '../exceptions/http-exception.js';
@@ -10,7 +9,7 @@ export abstract class FormRequest implements Middleware {
   abstract rules(req: Request): ZodSchema;
   authorize(_req: Request): boolean { return true; }
 
-  handle(req: Request, _res: Response, next: NextFunction): void {
+  handle(req: Request, _res: Response, next: Next): void {
     if (!this.authorize(req)) {
       next(new ForbiddenException());
       return;

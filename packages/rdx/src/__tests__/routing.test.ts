@@ -8,6 +8,7 @@ async function bootApp(register: () => void): Promise<Application> {
     .withConfig({ logging: { level: 'silent' } })
     .loadRoutesFrom(register);
   await a.boot();
+  await a.httpKernel().ready();
   return a;
 }
 
@@ -16,7 +17,7 @@ describe('Routing — function handlers', () => {
     const a = await bootApp(() => {
       Route.get('/ping', () => ({ pong: true }));
     });
-    const res = await request(a.httpKernel().express).get('/ping');
+    const res = await request(a.httpKernel().fastify.server).get('/ping');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ pong: true });
   });
@@ -28,7 +29,7 @@ describe('Routing — function handlers', () => {
         all: req.all(),
       }));
     });
-    const res = await request(a.httpKernel().express)
+    const res = await request(a.httpKernel().fastify.server)
       .post('/echo')
       .send({ name: 'Bob', x: 1 });
     expect(res.status).toBe(200);
@@ -40,7 +41,7 @@ describe('Routing — function handlers', () => {
     const a = await bootApp(() => {
       Route.get('/users/{id}', (req: Request) => ({ id: req.params.id }));
     });
-    const res = await request(a.httpKernel().express).get('/users/42');
+    const res = await request(a.httpKernel().fastify.server).get('/users/42');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ id: '42' });
   });
@@ -59,10 +60,10 @@ describe('Routing — controller actions', () => {
       Route.get('/users/{id}', [UserController, 'show']);
     });
 
-    const list = await request(a.httpKernel().express).get('/users');
+    const list = await request(a.httpKernel().fastify.server).get('/users');
     expect(list.body).toEqual({ list: ['a', 'b'] });
 
-    const one = await request(a.httpKernel().express).get('/users/7');
+    const one = await request(a.httpKernel().fastify.server).get('/users/7');
     expect(one.body).toEqual({ user: '7' });
   });
 
@@ -77,7 +78,7 @@ describe('Routing — controller actions', () => {
       Route.get('/whoami', [WhoamiController, 'handle']);
     });
 
-    const res = await request(a.httpKernel().express).get('/whoami');
+    const res = await request(a.httpKernel().fastify.server).get('/whoami');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ path: '/whoami', method: 'GET' });
   });
@@ -103,7 +104,7 @@ describe('Routing — groups', () => {
       });
     });
 
-    const res = await request(a.httpKernel().express).get('/api/v1/health');
+    const res = await request(a.httpKernel().fastify.server).get('/api/v1/health');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
     expect(log).toEqual(['audit', 'auth']);
@@ -141,12 +142,12 @@ describe('Routing — middleware on a single route', () => {
   });
 
   it('rejects when middleware throws', async () => {
-    const res = await request(a.httpKernel().express).get('/protected');
+    const res = await request(a.httpKernel().fastify.server).get('/protected');
     expect(res.status).toBe(500);
   });
 
   it('passes when middleware accepts', async () => {
-    const res = await request(a.httpKernel().express).get('/protected').set('x-token', 'secret');
+    const res = await request(a.httpKernel().fastify.server).get('/protected').set('x-token', 'secret');
     expect(res.status).toBe(200);
     expect(res.body).toEqual({ ok: true });
   });

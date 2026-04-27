@@ -1,41 +1,54 @@
-import type { Response as ExpressResponse, CookieOptions } from 'express';
+import type { FastifyReply } from 'fastify';
+
+export interface CookieOptions {
+  domain?: string;
+  path?: string;
+  expires?: Date;
+  maxAge?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: 'strict' | 'lax' | 'none' | boolean;
+  signed?: boolean;
+}
 
 export class Response {
-  constructor(public readonly raw: ExpressResponse) {}
+  constructor(public readonly raw: FastifyReply) {}
 
   status(code: number): this {
-    this.raw.status(code);
+    this.raw.code(code);
     return this;
   }
 
   json(data: unknown): void {
-    this.raw.json(data);
+    void this.raw.send(data);
   }
 
   send(body: unknown): void {
-    this.raw.send(body);
+    void this.raw.send(body);
   }
 
   noContent(): void {
-    this.raw.status(204).end();
+    void this.raw.code(204).send();
   }
 
   redirect(url: string, status = 302): void {
-    this.raw.redirect(status, url);
+    void this.raw.redirect(url, status);
   }
 
   header(name: string, value: string | string[]): this {
-    this.raw.setHeader(name, value);
+    this.raw.header(name, value);
     return this;
   }
 
   cookie(name: string, value: string, opts?: CookieOptions): this {
-    this.raw.cookie(name, value, opts ?? {});
+    const r = this.raw as unknown as { setCookie?: (n: string, v: string, o: CookieOptions) => void };
+    r.setCookie?.(name, value, opts ?? {});
     return this;
   }
 
   clearCookie(name: string, opts?: CookieOptions): this {
-    this.raw.clearCookie(name, opts ?? {});
+    const r = this.raw as unknown as { clearCookie?: (n: string, o: CookieOptions) => void };
+    r.clearCookie?.(name, opts ?? {});
     return this;
   }
 }

@@ -1,21 +1,30 @@
-import express, { type Express, type RequestHandler } from 'express';
+import { createRequire } from 'node:module';
+import Fastify, { type FastifyInstance } from 'fastify';
 import { type Server } from 'node:http';
 import type { Logger } from '../logging/logger.js';
 import type { Container } from '../container/container.js';
 import { createExceptionHandler, type ExceptionRenderer } from './exception-handler.js';
-import { toExpressHandler, type Middleware, type MiddlewareClass, type MiddlewareLike } from './middleware.js';
+import { toFastifyHandler, type Middleware, type MiddlewareClass, type MiddlewareLike } from './middleware.js';
 import { NotFoundException } from '../exceptions/http-exception.js';
 
+const require = createRequire(import.meta.url);
+
+export interface MultipartLimits {
+  fileSize?: number;
+  files?: number;
+  fields?: number;
+}
+
 export interface HttpKernelOptions {
-  jsonLimit?: string;
+  bodyLimit?: number;
   trustProxy?: boolean | number | string;
   exceptionRenderer?: ExceptionRenderer;
+  multipart?: MultipartLimits | false;
 }
 
 export class HttpKernel {
-  readonly express: Express;
+  readonly fastify: FastifyInstance;
   private finalized = false;
-  private bodyParsing = false;
   private server: Server | null = null;
 
   constructor(
@@ -23,72 +32,75 @@ export class HttpKernel {
     private readonly logger: Logger,
     private readonly options: HttpKernelOptions = {},
   ) {
-    this.express = express();
-    if (options.trustProxy !== undefined) {
-      this.express.set('trust proxy', options.trustProxy);
-    }
-  }
+    this.fastify = Fastify({
+      bodyLimit: options.bodyLimit ?? 1024 * 1024,
+      trustProxy: options.trustProxy as boolean | number,
+      logger: false,
+      disableRequestLogging: true,
+    });
 
-  setupBodyParsing(): this {
-    if (this.bodyParsing) return this;
-    this.bodyParsing = true;
-    this.express.use(express.json({ limit: this.options.jsonLimit ?? '1mb' }));
-    this.express.use(express.urlencoded({ extended: true }));
-    return this;
+    if (options.multipart !== false) {
+      const multipart = require('@fastify/multipart');
+      void this.fastify.register(multipart, {
+        limits: {
+          fileSize: options.multipart?.fileSize ?? 10 * 1024 * 1024,
+          files: options.multipart?.files ?? 10,
+          fields: options.multipart?.fields ?? 100,
+        },
+      });
+    }
   }
 
   use(mw: MiddlewareLike): this {
     this.assertNotFinalized();
-    this.express.use(
-      toExpressHandler(mw, (cls) =>
-        this.container.resolve<Middleware>(cls as unknown as MiddlewareClass),
-      ),
+    const handler = toFastifyHandler(mw, (cls) =>
+      this.container.resolve<Middleware>(cls as unknown as MiddlewareClass),
     );
+    this.fastify.addHook('preHandler', handler);
     return this;
   }
 
-  rawHandler(handler: RequestHandler): this {
+  register(plugin: any, opts?: any): this {
     this.assertNotFinalized();
-    this.express.use(handler);
+    void this.fastify.register(plugin, opts);
     return this;
   }
 
   finalize(): this {
     if (this.finalized) return this;
-    if (!this.bodyParsing) this.setupBodyParsing();
-    this.express.use((req, _res, next) => {
-      next(new NotFoundException(`Cannot ${req.method} ${req.path}`));
+    this.fastify.setNotFoundHandler(() => {
+      throw new NotFoundException();
     });
-    this.express.use(createExceptionHandler(this.logger, this.options.exceptionRenderer));
+    this.fastify.setErrorHandler(createExceptionHandler(this.logger, this.options.exceptionRenderer));
     this.finalized = true;
     return this;
   }
 
+  async ready(): Promise<this> {
+    this.finalize();
+    await this.fastify.ready();
+    return this;
+  }
+
+  async listen(port: number, host = '0.0.0.0'): Promise<Server> {
+    this.finalize();
+    await this.fastify.listen({ port, host });
+    this.server = this.fastify.server;
+    const addr = this.server.address();
+    const actualPort = typeof addr === 'object' && addr ? addr.port : port;
+    this.logger.info({ host, port: actualPort }, 'rdx server listening');
+    return this.server;
+  }
+
+  async close(): Promise<void> {
+    if (!this.finalized) return;
+    await this.fastify.close();
+    this.server = null;
+  }
+
   private assertNotFinalized(): void {
     if (this.finalized) {
-      throw new Error('HttpKernel is finalized; cannot add middleware/handlers');
+      throw new Error('HttpKernel is finalized; cannot add middleware/plugins');
     }
-  }
-
-  listen(port: number, host = '0.0.0.0'): Promise<Server> {
-    this.finalize();
-    return new Promise((resolve, reject) => {
-      const server = this.express.listen(port, host, () => {
-        this.server = server;
-        const addr = server.address();
-        const actualPort = typeof addr === 'object' && addr ? addr.port : port;
-        this.logger.info({ host, port: actualPort }, 'rdx server listening');
-        resolve(server);
-      });
-      server.on('error', reject);
-    });
-  }
-
-  close(): Promise<void> {
-    if (!this.server) return Promise.resolve();
-    return new Promise((resolve, reject) => {
-      this.server!.close((err) => (err ? reject(err) : resolve()));
-      this.server = null;
-    });
   }
 }

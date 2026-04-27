@@ -1,6 +1,5 @@
 import type { ZodSchema, ZodIssue } from 'zod';
-import type { NextFunction } from 'express';
-import type { Middleware } from '../http/middleware.js';
+import type { Middleware, Next } from '../http/middleware.js';
 import type { Request } from '../http/request.js';
 import type { Response } from '../http/response.js';
 import { ValidationException } from '../exceptions/http-exception.js';
@@ -16,7 +15,7 @@ export function zodErrorsToMap(issues: ZodIssue[]): Record<string, string[]> {
 
 export function validate<T>(schema: ZodSchema<T>): Middleware {
   return {
-    handle(req: Request, _res: Response, next: NextFunction) {
+    handle(req: Request, _res: Response, next: Next) {
       const result = schema.safeParse(req.all());
       if (!result.success) {
         next(new ValidationException(zodErrorsToMap(result.error.issues)));

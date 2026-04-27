@@ -1,4 +1,4 @@
-import type { ErrorRequestHandler } from 'express';
+import type { FastifyReply, FastifyRequest } from 'fastify';
 import type { Logger } from '../logging/logger.js';
 import { HttpException, ValidationException } from '../exceptions/http-exception.js';
 
@@ -21,7 +21,10 @@ export const defaultRenderer: ExceptionRenderer = (err) => {
       body: { message: err.message },
     };
   }
-  const e = err as { message?: string; stack?: string };
+  const e = err as { message?: string; stack?: string; statusCode?: number };
+  if (typeof e.statusCode === 'number' && e.statusCode >= 400 && e.statusCode < 600) {
+    return { status: e.statusCode, body: { message: e.message ?? 'Error' } };
+  }
   return {
     status: 500,
     body: process.env.NODE_ENV === 'production'
@@ -30,18 +33,21 @@ export const defaultRenderer: ExceptionRenderer = (err) => {
   };
 };
 
-export function createExceptionHandler(logger: Logger, renderer: ExceptionRenderer = defaultRenderer): ErrorRequestHandler {
-  return (err, req, res, _next) => {
+export function createExceptionHandler(logger: Logger, renderer: ExceptionRenderer = defaultRenderer) {
+  return async (err: Error, req: FastifyRequest, reply: FastifyReply): Promise<void> => {
     const rendered = renderer(err);
     if (rendered.status >= 500) {
-      logger.error({ err, path: req.path, method: req.method }, 'unhandled exception');
+      logger.error({ err, path: req.url, method: req.method }, 'unhandled exception');
     } else {
-      logger.warn({ err: { name: (err as Error).name, message: (err as Error).message }, status: rendered.status, path: req.path }, 'http exception');
+      logger.warn(
+        { err: { name: err.name, message: err.message }, status: rendered.status, path: req.url },
+        'http exception',
+      );
     }
     if (rendered.headers) {
-      for (const [k, v] of Object.entries(rendered.headers)) res.setHeader(k, v);
+      for (const [k, v] of Object.entries(rendered.headers)) reply.header(k, v);
     }
-    if (res.headersSent) return;
-    res.status(rendered.status).json(rendered.body);
+    if (reply.sent) return;
+    await reply.code(rendered.status).send(rendered.body);
   };
 }

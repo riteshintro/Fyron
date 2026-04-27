@@ -41,7 +41,7 @@ async function bootApp(): Promise<Application> {
   });
 
   await app.boot();
-  app.httpKernel().finalize();
+  await app.httpKernel().ready();
   return app;
 }
 
@@ -58,7 +58,7 @@ const SIGNUP = {
 
 describe('better-auth integration — signup + signin', () => {
   it('creates a user via /api/auth/sign-up/email', async () => {
-    const res = await request(app.httpKernel().express)
+    const res = await request(app.httpKernel().fastify.server)
       .post('/api/auth/sign-up/email')
       .send(SIGNUP);
     expect(res.status).toBe(200);
@@ -68,9 +68,9 @@ describe('better-auth integration — signup + signin', () => {
   });
 
   it('signs in an existing user', async () => {
-    await request(app.httpKernel().express).post('/api/auth/sign-up/email').send(SIGNUP);
+    await request(app.httpKernel().fastify.server).post('/api/auth/sign-up/email').send(SIGNUP);
 
-    const res = await request(app.httpKernel().express)
+    const res = await request(app.httpKernel().fastify.server)
       .post('/api/auth/sign-in/email')
       .send({ email: SIGNUP.email, password: SIGNUP.password });
     expect(res.status).toBe(200);
@@ -79,8 +79,8 @@ describe('better-auth integration — signup + signin', () => {
   });
 
   it('rejects sign-in with bad password', async () => {
-    await request(app.httpKernel().express).post('/api/auth/sign-up/email').send(SIGNUP);
-    const res = await request(app.httpKernel().express)
+    await request(app.httpKernel().fastify.server).post('/api/auth/sign-up/email').send(SIGNUP);
+    const res = await request(app.httpKernel().fastify.server)
       .post('/api/auth/sign-in/email')
       .send({ email: SIGNUP.email, password: 'wrong-password' });
     expect(res.status).toBeGreaterThanOrEqual(400);
@@ -89,12 +89,12 @@ describe('better-auth integration — signup + signin', () => {
 
 describe('RequireAuth middleware', () => {
   it('returns 401 without a session', async () => {
-    const res = await request(app.httpKernel().express).get('/me');
+    const res = await request(app.httpKernel().fastify.server).get('/me');
     expect(res.status).toBe(401);
   });
 
   it('passes with a valid session cookie', async () => {
-    const agent = request.agent(app.httpKernel().express);
+    const agent = request.agent(app.httpKernel().fastify.server);
 
     const signup = await agent.post('/api/auth/sign-up/email').send(SIGNUP);
     expect(signup.status).toBe(200);
@@ -109,13 +109,13 @@ describe('RequireAuth middleware', () => {
 
 describe('Auth facade', () => {
   it('Auth.user(req) returns null when unauthenticated', async () => {
-    const res = await request(app.httpKernel().express).get('/whoami');
+    const res = await request(app.httpKernel().fastify.server).get('/whoami');
     expect(res.status).toBe(200);
     expect(res.body.user).toBeNull();
   });
 
   it('Auth.user(req) returns the user when signed in', async () => {
-    const agent = request.agent(app.httpKernel().express);
+    const agent = request.agent(app.httpKernel().fastify.server);
     await agent.post('/api/auth/sign-up/email').send(SIGNUP);
     const res = await agent.get('/whoami');
     expect(res.status).toBe(200);

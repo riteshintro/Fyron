@@ -25,13 +25,12 @@ export class AuthServiceProvider extends ServiceProvider {
     const auth = this.app.container.resolve<RdxAuthInstance>('auth');
     const handler = toNodeHandler(auth);
 
-    this.app.httpKernel().express.use((req, res, next) => {
+    this.app.httpKernel().fastify.addHook('onRequest', async (req, reply) => {
       const url = req.url ?? '';
       if (url === prefix || url.startsWith(prefix + '/') || url.startsWith(prefix + '?')) {
-        handler(req, res).catch(next);
-        return;
+        reply.hijack();
+        await handler(req.raw, reply.raw);
       }
-      next();
     });
   }
 }

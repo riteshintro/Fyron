@@ -1,11 +1,15 @@
-import type { Request as ExpressRequest } from 'express';
+import type { FastifyRequest } from 'fastify';
 
 export class Request {
-  constructor(public readonly raw: ExpressRequest) {}
+  constructor(public readonly raw: FastifyRequest) {}
 
   get method(): string { return this.raw.method; }
-  get path(): string { return this.raw.path; }
-  get url(): string { return this.raw.originalUrl ?? this.raw.url; }
+  get path(): string {
+    const u = this.raw.url ?? '';
+    const q = u.indexOf('?');
+    return q === -1 ? u : u.slice(0, q);
+  }
+  get url(): string { return this.raw.url ?? ''; }
   get query(): Record<string, unknown> { return this.raw.query as Record<string, unknown>; }
   get params(): Record<string, string> { return this.raw.params as Record<string, string>; }
   get body(): unknown { return this.raw.body; }
@@ -70,6 +74,10 @@ export class Request {
     return /application\/json/i.test(this.header('accept') || '') || this.isJson();
   }
 
+  isMultipart(): boolean {
+    return /multipart\/form-data/i.test(this.header('content-type') || '');
+  }
+
   validated<T = Record<string, unknown>>(): T {
     return ((this.raw as unknown as { _validated?: T })._validated ?? {}) as T;
   }
@@ -87,28 +95,29 @@ export class Request {
     return ((this.raw as unknown as { _session?: T })._session ?? null) as T | null;
   }
 
-  file(field?: string): Express.Multer.File | undefined {
+  file(field?: string): RdxUploadedFile | undefined {
     const r = this.raw as unknown as {
-      file?: Express.Multer.File;
-      files?: Record<string, Express.Multer.File[]> | Express.Multer.File[];
+      _file?: RdxUploadedFile;
+      _files?: RdxUploadedFile[];
     };
-    if (r.file && (!field || r.file.fieldname === field)) return r.file;
-    if (!field) return undefined;
-    const files = r.files;
-    if (Array.isArray(files)) return files.find((f) => f.fieldname === field);
-    return files?.[field]?.[0];
+    if (r._file && (!field || r._file.fieldname === field)) return r._file;
+    if (!r._files) return undefined;
+    if (field) return r._files.find((f) => f.fieldname === field);
+    return r._files[0];
   }
 
-  files(field?: string): Express.Multer.File[] {
-    const r = this.raw as unknown as {
-      files?: Record<string, Express.Multer.File[]> | Express.Multer.File[];
-    };
-    const files = r.files;
-    if (!files) return [];
-    if (Array.isArray(files)) {
-      return field ? files.filter((f) => f.fieldname === field) : files;
-    }
-    if (field) return files[field] ?? [];
-    return Object.values(files).flat();
+  files(field?: string): RdxUploadedFile[] {
+    const r = this.raw as unknown as { _files?: RdxUploadedFile[] };
+    if (!r._files) return [];
+    if (field) return r._files.filter((f) => f.fieldname === field);
+    return r._files;
   }
+}
+
+export interface RdxUploadedFile {
+  fieldname: string;
+  originalname: string;
+  mimetype: string;
+  size: number;
+  buffer: Buffer;
 }

@@ -1,9 +1,15 @@
-import type { RequestHandler } from 'express';
+import type { FastifyReply, FastifyRequest, HTTPMethods, preHandlerAsyncHookHandler } from 'fastify';
 import type { Container } from '../container/container.js';
 import { HttpKernel } from '../http/kernel.js';
 import { Request } from '../http/request.js';
 import { Response } from '../http/response.js';
-import { toExpressHandler, toRequest, toResponse, type Middleware, type MiddlewareClass } from '../http/middleware.js';
+import {
+  toFastifyHandler,
+  toRequest,
+  toResponse,
+  type Middleware,
+  type MiddlewareClass,
+} from '../http/middleware.js';
 import type { RouteDef } from './route-definition.js';
 import type { Router } from './router.js';
 
@@ -14,50 +20,49 @@ export class RouteCompiler {
 
   compile(routes: RouteDef[], kernel: HttpKernel): void {
     for (const def of routes) {
-      const expressPath = toExpressPath(def.path);
-      const handlers: RequestHandler[] = def.middleware.map((mw) =>
-        toExpressHandler(mw, (cls) =>
+      const url = toFastifyPath(def.path);
+      const preHandlers: preHandlerAsyncHookHandler[] = def.middleware.map((mw) =>
+        toFastifyHandler(mw, (cls) =>
           this.container.resolve<Middleware>(cls as unknown as MiddlewareClass),
         ),
       );
-      handlers.push(this.makeActionHandler(def));
-      const method = def.method.toLowerCase() as Lowercase<typeof def.method>;
-      (kernel.express as unknown as Record<string, (path: string, ...h: RequestHandler[]) => unknown>)[method](
-        expressPath,
-        ...handlers,
-      );
+
+      kernel.fastify.route({
+        method: def.method as HTTPMethods,
+        url,
+        preHandler: preHandlers,
+        handler: this.makeActionHandler(def),
+      });
     }
   }
 
-  private makeActionHandler(def: RouteDef): RequestHandler {
-    return async (req, res, next) => {
-      try {
-        const wrappedReq = toRequest(req);
-        const wrappedRes = toResponse(res);
+  private makeActionHandler(def: RouteDef) {
+    return async (req: FastifyRequest, reply: FastifyReply) => {
+      const wrappedReq = toRequest(req);
+      const wrappedRes = toResponse(reply);
 
-        const scope = this.requestScope(req, wrappedReq, wrappedRes);
+      const scope = this.requestScope(req, wrappedReq, wrappedRes);
 
-        await this.applyBindings(req as unknown as { params: Record<string, string>; _bindings?: Record<string, unknown> });
+      await this.applyBindings(req as unknown as { params: Record<string, string>; _bindings?: Record<string, unknown> });
 
-        let result: unknown;
-        if (Array.isArray(def.handler)) {
-          const [Ctrl, action] = def.handler;
-          const inst = scope.resolve(Ctrl) as Record<string, (req: Request, res: Response) => unknown | Promise<unknown>>;
-          if (typeof inst[action] !== 'function') {
-            throw new Error(`Controller ${Ctrl.name} has no action "${action}"`);
-          }
-          result = await inst[action]!(wrappedReq, wrappedRes);
-        } else {
-          const fn = def.handler as (req: Request, res: Response) => unknown | Promise<unknown>;
-          result = await fn(wrappedReq, wrappedRes);
+      let result: unknown;
+      if (Array.isArray(def.handler)) {
+        const [Ctrl, action] = def.handler;
+        const inst = scope.resolve(Ctrl) as Record<
+          string,
+          (req: Request, res: Response) => unknown | Promise<unknown>
+        >;
+        if (typeof inst[action] !== 'function') {
+          throw new Error(`Controller ${Ctrl.name} has no action "${action}"`);
         }
-
-        if (result !== undefined && !res.headersSent) {
-          res.json(result);
-        }
-      } catch (e) {
-        next(e);
+        result = await inst[action]!(wrappedReq, wrappedRes);
+      } else {
+        const fn = def.handler as (req: Request, res: Response) => unknown | Promise<unknown>;
+        result = await fn(wrappedReq, wrappedRes);
       }
+
+      if (reply.sent) return;
+      if (result !== undefined) return result;
     };
   }
 
@@ -89,6 +94,6 @@ export class RouteCompiler {
   }
 }
 
-function toExpressPath(path: string): string {
+function toFastifyPath(path: string): string {
   return path.replace(/\{(\w+)(\??)\}/g, (_m, name, opt) => `:${name}${opt}`);
 }

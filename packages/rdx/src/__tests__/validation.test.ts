@@ -15,7 +15,7 @@ async function bootApp(register: () => void): Promise<Application> {
     .withConfig({ logging: { level: 'silent' } })
     .loadRoutesFrom(register);
   await a.boot();
-  a.httpKernel().finalize();
+  await a.httpKernel().ready();
   return a;
 }
 
@@ -26,7 +26,7 @@ describe('validate() middleware', () => {
       Route.post('/users', (req: Request) => req.validated())
         .middleware(validate(schema));
     });
-    const res = await request(app.httpKernel().express)
+    const res = await request(app.httpKernel().fastify.server)
       .post('/users')
       .send({ name: 'Alice', age: 30 });
     expect(res.status).toBe(200);
@@ -38,7 +38,7 @@ describe('validate() middleware', () => {
     const app = await bootApp(() => {
       Route.post('/users', () => ({ ok: true })).middleware(validate(schema));
     });
-    const res = await request(app.httpKernel().express)
+    const res = await request(app.httpKernel().fastify.server)
       .post('/users')
       .send({ email: 'not-an-email', age: 12 });
     expect(res.status).toBe(422);
@@ -70,7 +70,7 @@ describe('FormRequest class', () => {
       Route.post('/users', (req: Request) => req.validated())
         .middleware(CreateUserRequest);
     });
-    const res = await request(app.httpKernel().express)
+    const res = await request(app.httpKernel().fastify.server)
       .post('/users')
       .send({ name: 'A', email: 'a@b.com' });
     expect(res.status).toBe(200);
@@ -81,7 +81,7 @@ describe('FormRequest class', () => {
     const app = await bootApp(() => {
       Route.post('/users', () => ({})).middleware(CreateUserRequest);
     });
-    const res = await request(app.httpKernel().express).post('/users').send({});
+    const res = await request(app.httpKernel().fastify.server).post('/users').send({});
     expect(res.status).toBe(422);
     expect(res.body.errors.name).toBeDefined();
     expect(res.body.errors.email).toBeDefined();
@@ -91,10 +91,10 @@ describe('FormRequest class', () => {
     const app = await bootApp(() => {
       Route.post('/secret', () => ({ ok: true })).middleware(GuardedRequest);
     });
-    const denied = await request(app.httpKernel().express).post('/secret').send({});
+    const denied = await request(app.httpKernel().fastify.server).post('/secret').send({});
     expect(denied.status).toBe(403);
 
-    const allowed = await request(app.httpKernel().express)
+    const allowed = await request(app.httpKernel().fastify.server)
       .post('/secret')
       .set('x-token', 'ok')
       .send({});
@@ -116,7 +116,7 @@ describe('Route model binding', () => {
       }));
     });
 
-    const ok = await request(app.httpKernel().express).get('/users/7');
+    const ok = await request(app.httpKernel().fastify.server).get('/users/7');
     expect(ok.status).toBe(200);
     expect(ok.body).toEqual({ bound: fakeUser, rawId: '7' });
   });
@@ -128,7 +128,7 @@ describe('Route model binding', () => {
       });
       Route.get('/posts/{post}', () => ({}));
     });
-    const res = await request(app.httpKernel().express).get('/posts/99');
+    const res = await request(app.httpKernel().fastify.server).get('/posts/99');
     expect(res.status).toBe(500);
     expect(res.body.message).toBe('not found');
   });

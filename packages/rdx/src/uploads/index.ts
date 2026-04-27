@@ -4,7 +4,6 @@ export {
   uploadArray,
   uploadFields,
   uploadAny,
-  uploadNone,
   type UploadOptions,
   type UploadField,
   type UploadedFile,

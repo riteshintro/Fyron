@@ -11,14 +11,16 @@ export type { Logger } from './logging/logger.js';
 export { env, loadEnv } from './support/env.js';
 export { app, config, logger } from './support/helpers.js';
 
-export { Request } from './http/request.js';
-export { Response } from './http/response.js';
+export { Request, type RdxUploadedFile } from './http/request.js';
+export { Response, type CookieOptions } from './http/response.js';
 export { HttpKernel, type HttpKernelOptions } from './http/kernel.js';
 export {
   type Middleware,
   type MiddlewareFn,
   type MiddlewareClass,
   type MiddlewareLike,
+  type FastifyHookFn,
+  type Next,
   defineMiddleware,
 } from './http/middleware.js';
 export { HttpServiceProvider } from './providers/http-service-provider.js';
@@ -66,7 +68,6 @@ export {
   uploadArray,
   uploadFields,
   uploadAny,
-  uploadNone,
   type UploadOptions,
   type UploadField,
   type UploadedFile,
