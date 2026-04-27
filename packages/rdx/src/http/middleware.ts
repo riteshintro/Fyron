@@ -1,4 +1,4 @@
-import type { NextFunction, Request as ExpressRequest, Response as ExpressResponse, RequestHandler } from 'express';
+import type { NextFunction, Request as ExpressRequest, Response as ExpressResponse, RequestHandler, ErrorRequestHandler } from 'express';
 import { Request } from './request.js';
 import { Response } from './response.js';
 
@@ -10,7 +10,7 @@ export type MiddlewareFn = (req: Request, res: Response, next: NextFunction) => 
 
 export type MiddlewareClass = new (...args: any[]) => Middleware;
 
-export type MiddlewareLike = MiddlewareClass | Middleware | MiddlewareFn | RequestHandler;
+export type MiddlewareLike = MiddlewareClass | Middleware | MiddlewareFn | RequestHandler | ErrorRequestHandler;
 
 const MIDDLEWARE_MARK = Symbol.for('rdx.middleware');
 

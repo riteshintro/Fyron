@@ -14,6 +14,7 @@ import { MailServiceProvider } from './providers/mail-service-provider.js';
 import { HttpKernel } from './http/kernel.js';
 import { Router } from './routing/router.js';
 import { RouteCompiler } from './routing/compiler.js';
+import type { MiddlewareLike } from './http/middleware.js';
 import type { RdxAuthInstance } from './auth/auth-config.js';
 import type { Scheduler } from './scheduler/scheduler.js';
 import type { Mailer } from './mail/mailer.js';
@@ -40,6 +41,7 @@ export class Application {
   private routesLoader: (() => unknown | Promise<unknown>) | null = null;
   private scheduleLoader: (() => unknown | Promise<unknown>) | null = null;
   private shutdownHooks: Array<() => unknown | Promise<unknown>> = [];
+  private earlyMiddleware: MiddlewareLike[] = [];
 
   constructor(basePath: string = process.cwd()) {
     this.basePath = basePath;
@@ -79,6 +81,11 @@ export class Application {
     return this;
   }
 
+  use(...middleware: MiddlewareLike[]): this {
+    this.earlyMiddleware.push(...middleware);
+    return this;
+  }
+
   async boot(): Promise<void> {
     if (this.booted) return;
 
@@ -102,6 +109,11 @@ export class Application {
       const p = new P(this);
       this.providers.push(p);
       p.register();
+    }
+
+    if (this.earlyMiddleware.length && this.container.has('httpKernel')) {
+      const kernel = this.httpKernel();
+      for (const mw of this.earlyMiddleware) kernel.use(mw);
     }
 
     for (const p of this.providers) {
