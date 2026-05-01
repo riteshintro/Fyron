@@ -50,7 +50,7 @@ jobs:
       - name: Test
         run: pnpm -r test
 
-      - name: Publish fyronjs
+      - name: Publish @fyron/core
         if: ${{ !inputs.dry_run }}
         run: pnpm publish --access public --no-git-checks --provenance
         working-directory: packages/core
