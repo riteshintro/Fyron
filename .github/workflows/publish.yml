@@ -50,14 +50,14 @@ jobs:
       - name: Test
         run: pnpm -r test
 
-      - name: Publish avor
+      - name: Publish @riteshintro/avor
         if: ${{ !inputs.dry_run }}
         run: pnpm publish --access public --no-git-checks --provenance
         working-directory: packages/avor
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      - name: Publish avor-cli
+      - name: Publish @riteshintro/avor-cli
         if: ${{ !inputs.dry_run }}
         run: pnpm publish --access public --no-git-checks --provenance
         working-directory: packages/cli

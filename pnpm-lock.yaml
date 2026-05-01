@@ -26,10 +26,10 @@ importers:
 
   examples/blog-api:
     dependencies:
-      avor:
+      '@riteshintro/avor':
         specifier: workspace:*
         version: link:../../packages/avor
-      avor-cli:
+      '@riteshintro/avor-cli':
         specifier: workspace:*
         version: link:../../packages/cli
       drizzle-orm:
@@ -148,7 +148,7 @@ importers:
 
   packages/cli:
     dependencies:
-      avor:
+      '@riteshintro/avor':
         specifier: workspace:*
         version: link:../avor
       cac:

@@ -4,8 +4,8 @@ avor publishes three packages from this monorepo:
 
 | Package          | npm                                                   |
 |------------------|-------------------------------------------------------|
-| `avor`            | https://www.npmjs.com/package/avor                     |
-| `avor-cli`       | https://www.npmjs.com/package/avor-cli                |
+| `@riteshintro/avor`            | https://www.npmjs.com/package/@riteshintro/avor                     |
+| `@riteshintro/avor-cli`       | https://www.npmjs.com/package/@riteshintro/avor-cli                |
 | `create-avor-app` | https://www.npmjs.com/package/create-avor-app          |
 
 ## One-time setup
@@ -46,7 +46,7 @@ GitHub → Actions → **publish** → **Run workflow**. Tick **dry run** to see
 
 ## Workspace deps & versioning
 
-`avor-cli` depends on `avor` via `workspace:*`. pnpm rewrites this to a real version range at publish time, so the published tarball depends on the matching `avor` version. **Bump all three packages together** so the workspace ranges resolve cleanly on the registry.
+`@riteshintro/avor-cli` depends on `@riteshintro/avor` via `workspace:*`. pnpm rewrites this to a real version range at publish time, so the published tarball depends on the matching `@riteshintro/avor` version. **Bump all three packages together** so the workspace ranges resolve cleanly on the registry.
 
 ## Re-publishing the same version
 

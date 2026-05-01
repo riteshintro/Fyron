@@ -10,12 +10,12 @@ export {
   sessionTable as session,
   accountTable as account,
   verificationTable as verification,
-} from 'avor/auth';
+} from '@riteshintro/avor/auth';
 `;
 
 const MIDDLEWARE_FILE = `// Re-export RequireAuth so it's discoverable in your app's middleware folder.
 // Use it in routes: Route.post('/posts', [...]).middleware(RequireAuth)
-export { RequireAuth } from 'avor';
+export { RequireAuth } from '@riteshintro/avor';
 `;
 
 export interface MakeAuthOpts {

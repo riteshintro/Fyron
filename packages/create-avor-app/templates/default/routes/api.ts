@@ -1,4 +1,4 @@
-import { Route } from 'avor';
+import { Route } from '@riteshintro/avor';
 
 Route.get('/', () => ({ name: '__APP_NAME__', framework: 'avor' }));
 

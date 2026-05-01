@@ -1,4 +1,4 @@
-import { Application } from 'avor';
+import { Application } from '@riteshintro/avor';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 

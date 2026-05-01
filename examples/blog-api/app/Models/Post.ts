@@ -1,4 +1,4 @@
-import { Model } from 'avor/database';
+import { Model } from '@riteshintro/avor/database';
 import { postsTable } from '../../database/schema/posts.js';
 
 export class Post extends Model {

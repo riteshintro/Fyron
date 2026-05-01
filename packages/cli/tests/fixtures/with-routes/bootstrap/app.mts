@@ -1,4 +1,4 @@
-import { Application, Route } from 'avor';
+import { Application, Route } from '@riteshintro/avor';
 
 export default async function () {
   return new Application(process.cwd())

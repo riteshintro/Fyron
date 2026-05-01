@@ -1,6 +1,6 @@
 {
-  "name": "avor-cli",
-  "version": "0.0.4",
+  "name": "@riteshintro/avor-cli",
+  "version": "0.0.5",
   "description": "avor framework command-line interface",
   "license": "MIT",
   "author": "riteshintro",
@@ -41,7 +41,7 @@
     "drizzle-orm": "^0.45.2",
     "handlebars": "^4.7.8",
     "picocolors": "^1.1.1",
-    "avor": "workspace:*",
+    "@riteshintro/avor": "workspace:*",
     "reflect-metadata": "^0.2.2",
     "tinyglobby": "^0.2.10",
     "tsx": "^4.19.2"
