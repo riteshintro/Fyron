@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import type { Application } from 'avoxjs';
+import type { Application } from '@avoxjs/avox';
 
 const CANDIDATES = ['bootstrap/app.ts', 'bootstrap/app.mts', 'bootstrap/app.js', 'bootstrap/app.mjs'];
 

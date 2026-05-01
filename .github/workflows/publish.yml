@@ -50,7 +50,7 @@ jobs:
       - name: Test
         run: pnpm -r test
 
-      - name: Publish avoxjs
+      - name: Publish @avoxjs/avox
         if: ${{ !inputs.dry_run }}
         run: pnpm publish --access public --no-git-checks --provenance
         working-directory: packages/avox

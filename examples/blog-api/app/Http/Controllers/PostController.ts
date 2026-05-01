@@ -1,5 +1,5 @@
 import { injectable } from 'tsyringe';
-import type { Request, Response } from 'avoxjs';
+import type { Request, Response } from '@avoxjs/avox';
 import { Post } from '../../Models/Post.js';
 
 @injectable()

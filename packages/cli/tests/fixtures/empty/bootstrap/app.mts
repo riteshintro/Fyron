@@ -1,4 +1,4 @@
-import { Application } from 'avoxjs';
+import { Application } from '@avoxjs/avox';
 
 export default async function () {
   return new Application(process.cwd()).withConfig({

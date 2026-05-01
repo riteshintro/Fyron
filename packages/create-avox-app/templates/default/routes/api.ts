@@ -1,4 +1,4 @@
-import { Route } from 'avoxjs';
+import { Route } from '@avoxjs/avox';
 
 Route.get('/', () => ({ name: '__APP_NAME__', framework: 'avox' }));
 
