@@ -6,11 +6,11 @@
   "author": "riteshintro",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/riteshintro/RDX.js.git",
+    "url": "git+https://github.com/riteshintro/Fyron.git",
     "directory": "packages/cli"
   },
-  "homepage": "https://github.com/riteshintro/RDX.js#readme",
-  "bugs": "https://github.com/riteshintro/RDX.js/issues",
+  "homepage": "https://github.com/riteshintro/Fyron#readme",
+  "bugs": "https://github.com/riteshintro/Fyron/issues",
   "keywords": [
     "fyron",
     "cli",
@@ -41,7 +41,7 @@
     "drizzle-orm": "^0.45.2",
     "handlebars": "^4.7.8",
     "picocolors": "^1.1.1",
-    "fyronjs": "workspace:*",
+    "@fyron/core": "workspace:*",
     "reflect-metadata": "^0.2.2",
     "tinyglobby": "^0.2.10",
     "tsx": "^4.19.2"

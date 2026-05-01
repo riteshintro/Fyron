@@ -29,12 +29,12 @@ importers:
       '@fyron/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@fyron/core':
+        specifier: workspace:*
+        version: link:../../packages/core
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.2.17)(@types/pg@8.20.0)(kysely@0.28.16)(pg@8.20.0)
-      fyronjs:
-        specifier: workspace:*
-        version: link:../../packages/core
       pg:
         specifier: ^8.13.1
         version: 8.20.0
@@ -66,15 +66,15 @@ importers:
 
   packages/cli:
     dependencies:
+      '@fyron/core':
+        specifier: workspace:*
+        version: link:../core
       cac:
         specifier: ^6.7.14
         version: 6.7.14
       drizzle-orm:
         specifier: ^0.45.2
         version: 0.45.2(@electric-sql/pglite@0.2.17)(@types/pg@8.20.0)(kysely@0.28.16)(pg@8.20.0)
-      fyronjs:
-        specifier: workspace:*
-        version: link:../core
       handlebars:
         specifier: ^4.7.8
         version: 4.7.9

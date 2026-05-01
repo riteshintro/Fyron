@@ -7,16 +7,16 @@ const cli = cac('create-fyron-app');
 
 cli
   .command('[name]', 'Create a new fyron application')
-  .option('--fyronjs-version <v>', 'fyronjs version', { default: '^0.0.1' })
+  .option('--core-version <v>', 'fyron core version', { default: '^0.0.1' })
   .option('--cli-version <v>', '@fyron/cli version', { default: '^0.0.1' })
-  .action(async (name: string | undefined, opts: { fyronjsVersion?: string; cliVersion?: string }) => {
+  .action(async (name: string | undefined, opts: { coreVersion?: string; cliVersion?: string }) => {
     const projectName = name ?? 'my-fyron-app';
     const targetDir = resolve(process.cwd(), projectName);
     console.log(pc.bold(`\nCreating ${pc.cyan(projectName)} at ${pc.dim(targetDir)}\n`));
     await scaffold({
       name: projectName,
       targetDir,
-      fyronjsVersion: opts.fyronjsVersion,
+      coreVersion: opts.coreVersion,
       cliVersion: opts.cliVersion,
     });
     console.log(pc.green('✓ Project created.'));

@@ -1,4 +1,4 @@
-import { Application } from 'fyronjs';
+import { Application } from '@fyron/core';
 import { PGlite } from '@electric-sql/pglite';
 import { drizzle } from 'drizzle-orm/pglite';
 

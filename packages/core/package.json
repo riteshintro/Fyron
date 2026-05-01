@@ -1,16 +1,16 @@
 {
-  "name": "fyronjs",
+  "name": "@fyron/core",
   "version": "0.1.1",
   "description": "Laravel-like framework for Node.js on Fastify + Drizzle",
   "license": "MIT",
   "author": "riteshintro",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/riteshintro/RDX.js.git",
+    "url": "git+https://github.com/riteshintro/Fyron.git",
     "directory": "packages/core"
   },
-  "homepage": "https://github.com/riteshintro/RDX.js#readme",
-  "bugs": "https://github.com/riteshintro/RDX.js/issues",
+  "homepage": "https://github.com/riteshintro/Fyron#readme",
+  "bugs": "https://github.com/riteshintro/Fyron/issues",
   "keywords": [
     "framework",
     "laravel",

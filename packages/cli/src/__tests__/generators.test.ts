@@ -22,7 +22,7 @@ describe('makeController', () => {
     expect(path.endsWith('UserController.ts')).toBe(true);
     const src = await readFile(path, 'utf8');
     expect(src).toContain('export class UserController');
-    expect(src).toContain("from 'fyronjs'");
+    expect(src).toContain("from '@fyron/core'");
   });
 
   it('does not double-suffix Controller', async () => {

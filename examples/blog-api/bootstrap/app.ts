@@ -1,5 +1,5 @@
 import 'reflect-metadata';
-import { Application } from 'fyronjs';
+import { Application } from '@fyron/core';
 import { fileURLToPath } from 'node:url';
 import { resolve } from 'node:path';
 

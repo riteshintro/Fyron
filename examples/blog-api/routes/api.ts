@@ -1,4 +1,4 @@
-import { Route, RequireAuth } from 'fyronjs';
+import { Route, RequireAuth } from '@fyron/core';
 import { PostController } from '../app/Http/Controllers/PostController.js';
 import { StorePostRequest } from '../app/Http/Requests/StorePostRequest.js';
 
