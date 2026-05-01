@@ -1,6 +1,6 @@
 {
-  "name": "@riteshintro/avor",
-  "version": "0.0.5",
+  "name": "avorjs",
+  "version": "0.0.6",
   "description": "Laravel-like framework for Node.js on Fastify + Drizzle",
   "license": "MIT",
   "author": "riteshintro",

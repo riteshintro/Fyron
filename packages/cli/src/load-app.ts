@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { existsSync } from 'node:fs';
 import { pathToFileURL } from 'node:url';
-import type { Application } from '@riteshintro/avor';
+import type { Application } from 'avorjs';
 
 const CANDIDATES = ['bootstrap/app.ts', 'bootstrap/app.mts', 'bootstrap/app.js', 'bootstrap/app.mjs'];
 
