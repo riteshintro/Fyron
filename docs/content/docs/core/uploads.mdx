@@ -1,0 +1,75 @@
+---
+title: File Uploads
+description: Multipart file upload handling via @fastify/multipart.
+---
+
+## Configuration
+
+```ts title="config/app.ts"
+export const app = {
+  uploads: {
+    maxFileSize: 10 * 1024 * 1024,   // 10 MB
+    maxFiles: 5,
+  },
+};
+```
+
+## Single file
+
+```ts
+import { Upload } from '@fyron/core/uploads';
+import { Route } from '@fyron/core/routing';
+
+Route.post('/avatar', Upload.single('avatar'), async (req) => {
+  const file = req.file;
+  // file.filename, file.mimetype, file.data (Buffer)
+  return { uploaded: file.filename };
+});
+```
+
+## Multiple files (same field)
+
+```ts
+Route.post('/gallery', Upload.array('images', 10), async (req) => {
+  const files = req.files;
+  return { count: files.length };
+});
+```
+
+## Multiple fields
+
+```ts
+Route.post('/submit', Upload.fields([
+  { name: 'resume', maxCount: 1 },
+  { name: 'cover',  maxCount: 1 },
+]), async (req) => {
+  const resume = req.files.resume?.[0];
+  const cover  = req.files.cover?.[0];
+  return { ok: true };
+});
+```
+
+## File object shape
+
+```ts
+interface UploadedFile {
+  fieldname: string;
+  filename:  string;
+  encoding:  string;
+  mimetype:  string;
+  data:      Buffer;
+  size:      number;
+}
+```
+
+## Saving to disk
+
+Fyron gives you the raw `Buffer`. Persist it yourself:
+
+```ts
+import { writeFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+const dest = join('storage', 'uploads', file.filename);
+await writeFile(dest, file.data);
+```

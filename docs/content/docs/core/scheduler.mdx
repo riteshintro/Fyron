@@ -1,0 +1,64 @@
+---
+title: Scheduler
+description: Cron-based task scheduling with a clean Schedule facade.
+---
+
+## Defining tasks
+
+Load tasks in `bootstrap/app.ts`:
+
+```ts
+app.loadScheduleFrom(() => import('../schedule/tasks.js'));
+```
+
+```ts title="schedule/tasks.ts"
+import { Schedule } from '@fyron/core/scheduler';
+
+Schedule.call(() => {
+  console.log('runs every minute');
+}).everyMinute();
+
+Schedule.call(async () => {
+  await cleanupExpiredSessions();
+}).daily();
+
+Schedule.call(sendDigestEmail).dailyAt('08:00');
+```
+
+## Frequency helpers
+
+| Method | Cron expression |
+|--------|----------------|
+| `everyMinute()` | `* * * * *` |
+| `everyFiveMinutes()` | `*/5 * * * *` |
+| `everyTenMinutes()` | `*/10 * * * *` |
+| `everyFifteenMinutes()` | `*/15 * * * *` |
+| `everyThirtyMinutes()` | `*/30 * * * *` |
+| `hourly()` | `0 * * * *` |
+| `daily()` | `0 0 * * *` |
+| `dailyAt('HH:MM')` | `MM HH * * *` |
+| `weekly()` | `0 0 * * 0` |
+| `monthly()` | `0 0 1 * *` |
+| `cron('* * * * *')` | Custom expression |
+
+## Timezone
+
+```ts
+Schedule.call(fn).dailyAt('09:00').timezone('America/New_York');
+```
+
+## Preventing overlap
+
+Tasks are protected against overlapping runs by default — if a task is still running when the next tick fires, the new run is skipped.
+
+## CLI
+
+```bash
+# List all scheduled tasks
+pnpm fyron schedule:list
+
+# Start the scheduler (runs as a long-lived process)
+pnpm fyron schedule:run
+```
+
+For production, run `schedule:run` alongside your HTTP server, or as a separate process/container.

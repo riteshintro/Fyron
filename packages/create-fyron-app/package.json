@@ -33,6 +33,7 @@
   "scripts": {
     "build": "tsup",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check src",
     "test": "vitest run",
     "clean": "rm -rf dist .tsbuildinfo"
   },

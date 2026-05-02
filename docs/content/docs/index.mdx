@@ -1,0 +1,36 @@
+---
+title: Introduction
+description: Fyron — Laravel-style Node.js framework built on Fastify 5, Drizzle ORM, and TypeScript.
+---
+
+Fyron is a backend framework for Node.js that brings Laravel's developer ergonomics to the TypeScript/ESM ecosystem.
+It is opinionated about structure but stays thin on abstractions — everything compiles down to ordinary Fastify routes and Drizzle queries.
+
+## Core stack
+
+| Layer | Library |
+|-------|---------|
+| HTTP server | Fastify 5 |
+| Database ORM | Drizzle ORM + pg |
+| Authentication | better-auth |
+| Dependency injection | tsyringe |
+| Validation | Zod 4 |
+| Mail | nodemailer + Handlebars |
+| Scheduler | croner |
+| Logging | pino |
+
+## Packages
+
+| Package | Purpose |
+|---------|---------|
+| `@fyron/core` | Framework runtime (HTTP, DB, auth, mail, scheduler, DI, validation) |
+| `@fyron/cli` | Artisan-style CLI — generators, `serve`, `migrate`, `db:seed`, `schedule:*` |
+| `create-fyron-app` | Project scaffolder |
+
+## Quick links
+
+- [Installation](/docs/getting-started/installation)
+- [Quick start](/docs/getting-started/quick-start)
+- [Routing](/docs/core/routing)
+- [Database](/docs/core/database)
+- [CLI commands](/docs/cli/commands)

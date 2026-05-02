@@ -1,0 +1,58 @@
+---
+title: Installation
+description: Requirements and installation options for Fyron.
+---
+
+## Requirements
+
+- Node.js >= 20
+- pnpm, npm, or yarn
+- PostgreSQL (or use `@electric-sql/pglite` for local dev)
+
+## Scaffold a new project
+
+The fastest way to get started:
+
+```bash
+npm create fyron-app@latest my-api
+cd my-api
+pnpm install
+cp .env.example .env
+```
+
+Edit `.env` and set `DATABASE_URL`:
+
+```
+DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
+```
+
+## Manual installation
+
+Install both packages:
+
+```bash
+pnpm add @fyron/core @fyron/cli
+pnpm add -D typescript tsx drizzle-kit @types/node
+```
+
+Fyron requires `reflect-metadata` and `tsyringe` for dependency injection. The scaffolded project includes these, but if you install manually:
+
+```bash
+pnpm add reflect-metadata tsyringe
+```
+
+Your `tsconfig.json` must enable decorator metadata:
+
+```json
+{
+  "compilerOptions": {
+    "experimentalDecorators": true,
+    "emitDecoratorMetadata": true,
+    "useDefineForClassFields": false
+  }
+}
+```
+
+## Peer dependencies
+
+`@fyron/cli` expects `drizzle-orm` and `handlebars` to be present (they come transitively via `@fyron/core`). No extra install needed.

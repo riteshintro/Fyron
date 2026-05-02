@@ -11,4 +11,5 @@ export default defineConfig({
   splitting: false,
   treeshake: true,
   shims: false,
+  external: ['@fyron/core'],
 });

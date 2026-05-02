@@ -1,0 +1,4 @@
+{
+  "title": "Core",
+  "pages": ["routing", "database", "validation", "auth", "mail", "scheduler", "uploads"]
+}

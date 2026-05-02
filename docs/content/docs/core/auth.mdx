@@ -1,0 +1,96 @@
+---
+title: Authentication
+description: better-auth integration with email verification and password reset.
+---
+
+## Setup
+
+Scaffold the auth schema and middleware:
+
+```bash
+pnpm fyron make:auth
+```
+
+This generates:
+- `database/schema/auth.ts` — user, session, account, verification tables
+- `app/Http/Middleware/RequireAuth.ts` — injectable auth middleware
+
+Run the migration:
+
+```bash
+pnpm fyron migrate
+```
+
+## Configuration
+
+```ts title="config/auth.ts"
+export const auth = {
+  enabled: true,
+  routePrefix: '/auth',           // better-auth mounts here
+  email: {
+    requireVerification: true,
+    sendOnSignUp: true,
+  },
+  options: {
+    // passed through to better-auth createAuth()
+    // see better-auth docs for all options
+  },
+};
+```
+
+```ts title="bootstrap/app.ts"
+import { authConfig } from '../config/auth.js';
+
+app.withConfig({ auth: authConfig });
+```
+
+## Protecting routes
+
+Inject `RequireAuth` as route middleware:
+
+```ts
+import { RequireAuth } from '@fyron/core/auth';
+
+Route.group({ prefix: '/api', middleware: [RequireAuth] }, () => {
+  Route.get('/me', async (req) => req.user);
+});
+```
+
+`RequireAuth` reads the session cookie set by better-auth and populates `req.user`. Returns `401` if no valid session.
+
+## Auth facade
+
+```ts
+import { Auth } from '@fyron/core/auth';
+
+const auth = Auth.instance();
+
+// Sign up
+await auth.api.signUpEmail({ body: { email, password, name } });
+
+// Sign in
+await auth.api.signInEmail({ body: { email, password } });
+
+// Get session from a request
+const session = await auth.api.getSession({ headers: req.headers });
+```
+
+## Email flows
+
+Fyron pre-wires two mailables via the mail service:
+
+| Flow | Mailable |
+|------|---------|
+| Email verification on signup | `VerifyEmailMail` |
+| Password reset | `ResetPasswordMail` |
+
+Configure the mail transport — see [Mail](/docs/core/mail) — and the flows work automatically.
+
+## Environment variables
+
+```
+BETTER_AUTH_SECRET=your-secret-key-min-32-chars
+BETTER_AUTH_URL=https://yourdomain.com
+AUTH_REQUIRE_EMAIL_VERIFICATION=true
+AUTH_SEND_VERIFICATION_ON_SIGNUP=true
+```

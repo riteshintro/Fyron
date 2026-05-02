@@ -1,0 +1,161 @@
+---
+title: CLI Commands
+description: All 12 artisan-style commands provided by @fyron/cli.
+---
+
+Run any command via the `fyron` binary:
+
+```bash
+pnpm fyron <command>
+```
+
+---
+
+## serve
+
+Start the Fastify HTTP server.
+
+```bash
+pnpm fyron serve
+pnpm fyron serve --port 3000
+pnpm fyron serve --host 0.0.0.0
+```
+
+---
+
+## route:list
+
+Print a formatted table of all registered routes.
+
+```bash
+pnpm fyron route:list
+```
+
+Output:
+
+```
+METHOD  PATH          HANDLER
+GET     /posts        PostController.index
+POST    /posts        PostController.store
+GET     /posts/:id    PostController.show
+```
+
+---
+
+## make:controller
+
+Generate a controller class.
+
+```bash
+pnpm fyron make:controller PostController
+```
+
+Creates `app/Http/Controllers/PostController.ts`.
+
+---
+
+## make:model
+
+Generate a model class.
+
+```bash
+pnpm fyron make:model Post
+```
+
+Creates `app/Models/Post.ts`.
+
+---
+
+## make:middleware
+
+Generate a middleware class.
+
+```bash
+pnpm fyron make:middleware EnsureAdmin
+```
+
+Creates `app/Http/Middleware/EnsureAdmin.ts`.
+
+---
+
+## make:migration
+
+Generate a Drizzle migration file.
+
+```bash
+pnpm fyron make:migration create_posts_table
+```
+
+Delegates to `drizzle-kit generate`. Requires `drizzle.config.ts` in the project root.
+
+---
+
+## make:auth
+
+Scaffold the better-auth schema and `RequireAuth` middleware.
+
+```bash
+pnpm fyron make:auth
+```
+
+Generates:
+- `database/schema/auth.ts`
+- `app/Http/Middleware/RequireAuth.ts`
+
+---
+
+## make:mail
+
+Generate a Mailable class and Handlebars template.
+
+```bash
+pnpm fyron make:mail WelcomeMail
+```
+
+Creates:
+- `app/Mail/WelcomeMail.ts`
+- `resources/mail/welcome-mail.hbs`
+
+---
+
+## migrate
+
+Apply all pending Drizzle migrations.
+
+```bash
+pnpm fyron migrate
+```
+
+---
+
+## db:seed
+
+Discover and run all seeder files.
+
+```bash
+pnpm fyron db:seed
+```
+
+Fyron discovers files matching `database/seeders/**/*.ts` and runs them in order.
+
+---
+
+## schedule:list
+
+List all scheduled tasks with their cron expressions.
+
+```bash
+pnpm fyron schedule:list
+```
+
+---
+
+## schedule:run
+
+Start the cron scheduler as a long-lived process.
+
+```bash
+pnpm fyron schedule:run
+```
+
+Run this alongside your HTTP server (or as a separate container) in production.
