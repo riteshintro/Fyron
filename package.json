@@ -17,7 +17,7 @@
     "dev": "turbo dev",
     "changeset": "changeset",
     "version-packages": "changeset version",
-    "release": "turbo build --filter='!@fyron/docs' && changeset publish --provenance"
+    "release": "turbo build --filter='!@fyron/docs' && changeset publish"
   },
   "devDependencies": {
     "@biomejs/biome": "^1.9.0",
