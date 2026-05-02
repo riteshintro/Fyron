@@ -10,6 +10,9 @@ jobs:
   build-test:
     runs-on: ubuntu-latest
     timeout-minutes: 20
+    strategy:
+      matrix:
+        node-version: [20, 22]
     steps:
       - uses: actions/checkout@v4
 
@@ -19,10 +22,10 @@ jobs:
           version: 10.18.3
           run_install: false
 
-      - name: Setup Node.js
+      - name: Setup Node.js ${{ matrix.node-version }}
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: ${{ matrix.node-version }}
           cache: pnpm
 
       - name: Install
@@ -31,11 +34,5 @@ jobs:
       - name: Approve build scripts
         run: pnpm rebuild esbuild @swc/core
 
-      - name: Build
-        run: pnpm -r build
-
-      - name: Typecheck
-        run: pnpm -r typecheck
-
-      - name: Test
-        run: pnpm -r test
+      - name: Build, typecheck, lint, test
+        run: turbo build typecheck lint test --filter='!@fyron/docs' --filter='!blog-api'

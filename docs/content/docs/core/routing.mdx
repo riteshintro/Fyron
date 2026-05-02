@@ -1,0 +1,93 @@
+---
+title: Routing
+description: Laravel-style Route facade on Fastify 5.
+---
+
+## Basic routes
+
+```ts
+import { Route } from '@fyron/core/routing';
+
+Route.get('/users', handler);
+Route.post('/users', handler);
+Route.put('/users/:id', handler);
+Route.delete('/users/:id', handler);
+```
+
+A handler is any async function that receives `(request, reply)` — identical to a Fastify handler:
+
+```ts
+Route.get('/hello', async (req, reply) => {
+  return { message: 'hello' };
+});
+```
+
+## Route groups
+
+Group routes under a shared prefix and/or middleware:
+
+```ts
+Route.group({ prefix: '/api/v1' }, () => {
+  Route.get('/posts', listPosts);
+  Route.post('/posts', createPost);
+
+  Route.group({ prefix: '/posts/:postId' }, () => {
+    Route.get('/comments', listComments);
+  });
+});
+```
+
+### Middleware on a group
+
+```ts
+import { RequireAuth } from '@fyron/core/auth';
+
+Route.group({ prefix: '/dashboard', middleware: [RequireAuth] }, () => {
+  Route.get('/stats', getStats);
+});
+```
+
+## Named routes
+
+Name a route for URL generation:
+
+```ts
+Route.get('/posts/:id', showPost).name('posts.show');
+Route.get('/users/:id/profile', userProfile).name('user.profile');
+```
+
+Generate URLs elsewhere:
+
+```ts
+import { Route } from '@fyron/core/routing';
+
+Route.url('posts.show', { id: 42 });          // '/posts/42'
+Route.url('user.profile', { id: 'alice' });   // '/users/alice/profile'
+```
+
+## Route model binding
+
+Automatically resolve a model from a route parameter:
+
+```ts
+import { Post } from '../app/Models/Post.js';
+
+Route.bind('post', (id) => Post.findOrFail(Number(id)));
+
+Route.get('/posts/:post', async (req) => {
+  const post = req.models.post as Post;
+  return post;
+});
+```
+
+## Accessing request data
+
+```ts
+Route.post('/items', async (req) => {
+  const body  = req.body;         // parsed JSON body
+  const query = req.query;        // query string params
+  const id    = req.params.id;    // route params
+  const token = req.header('authorization');
+  return { ok: true };
+});
+```

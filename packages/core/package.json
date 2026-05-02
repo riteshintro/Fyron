@@ -78,6 +78,7 @@
       "import": "./dist/support/index.js"
     }
   },
+  "sideEffects": false,
   "files": [
     "dist"
   ],
@@ -85,6 +86,7 @@
     "build": "tsup",
     "dev": "tsup --watch",
     "typecheck": "tsc --noEmit",
+    "lint": "biome check src",
     "test": "vitest run",
     "clean": "rm -rf dist .tsbuildinfo"
   },

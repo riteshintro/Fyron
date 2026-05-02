@@ -46,6 +46,9 @@ export class Application {
   constructor(basePath: string = process.cwd()) {
     this.basePath = basePath;
     this.container = new Container();
+    if (currentApp && currentApp !== this) {
+      console.warn('[fyron] Warning: new Application instance overwrites previous. Call Application.reset() between tests.');
+    }
     currentApp = this;
   }
 
@@ -56,6 +59,11 @@ export class Application {
     return currentApp;
   }
 
+  /** Reset the global singleton — use in test teardown only. */
+  static reset(): void {
+    currentApp = null;
+  }
+
   withConfig(data: ConfigData): this {
     this.initialConfig = { ...this.initialConfig, ...data };
     return this;
@@ -63,6 +71,22 @@ export class Application {
 
   withProviders(providers: ProviderClass[]): this {
     this.providerClasses.push(...providers);
+    return this;
+  }
+
+  /** Insert providers immediately before a built-in provider class. */
+  withProvidersBefore(target: ProviderClass, providers: ProviderClass[]): this {
+    const idx = this.builtIns.indexOf(target);
+    if (idx === -1) throw new Error(`Built-in provider ${target.name} not found`);
+    this.builtIns.splice(idx, 0, ...providers);
+    return this;
+  }
+
+  /** Insert providers immediately after a built-in provider class. */
+  withProvidersAfter(target: ProviderClass, providers: ProviderClass[]): this {
+    const idx = this.builtIns.indexOf(target);
+    if (idx === -1) throw new Error(`Built-in provider ${target.name} not found`);
+    this.builtIns.splice(idx + 1, 0, ...providers);
     return this;
   }
 
@@ -108,11 +132,19 @@ export class Application {
     for (const P of all) {
       const p = new P(this);
       this.providers.push(p);
-      p.register();
+      try {
+        p.register();
+      } catch (err) {
+        throw new Error(`Provider ${P.name} failed during register()`, { cause: err });
+      }
     }
 
     for (const p of this.providers) {
-      await p.boot();
+      try {
+        await p.boot();
+      } catch (err) {
+        throw new Error(`Provider ${p.constructor.name} failed during boot()`, { cause: err });
+      }
     }
 
     if (this.earlyMiddleware.length && this.container.has('httpKernel')) {
@@ -141,7 +173,7 @@ export class Application {
         providers: this.providers.length,
         routes: this.container.has('router') ? this.container.resolve<Router>('router').routes.length : 0,
       },
-      'avor booted',
+      'fyron booted',
     );
   }
 
@@ -179,6 +211,14 @@ export class Application {
     const cfg = this.config();
     const p = port ?? cfg.get<number>('app.port', 8000);
     const h = host ?? cfg.get<string>('app.host', '127.0.0.1');
+
+    const handleShutdown = async () => {
+      await this.shutdown();
+      process.exit(0);
+    };
+    process.once('SIGTERM', handleShutdown);
+    process.once('SIGINT', handleShutdown);
+
     return this.httpKernel().listen(p, h);
   }
 

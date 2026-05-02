@@ -1,0 +1,133 @@
+---
+title: Database
+description: Active Record pattern over Drizzle ORM with PostgreSQL.
+---
+
+## Configuration
+
+```ts title="config/database.ts"
+export const database = {
+  url: process.env.DATABASE_URL!,
+};
+```
+
+```ts title="bootstrap/app.ts"
+app.withConfig({ database });
+```
+
+## Defining a schema
+
+Use Drizzle's schema DSL — identical to using Drizzle standalone:
+
+```ts title="database/schema/posts.ts"
+import { pgTable, serial, text, timestamp, integer } from 'drizzle-orm/pg-core';
+
+export const posts = pgTable('posts', {
+  id:        serial('id').primaryKey(),
+  title:     text('title').notNull(),
+  body:      text('body').notNull(),
+  userId:    integer('user_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+```
+
+## Defining a model
+
+```ts title="app/Models/Post.ts"
+import { Model } from '@fyron/core/database';
+import { posts } from '../../database/schema/posts.js';
+
+export class Post extends Model {
+  static table = posts;
+}
+```
+
+## Static queries
+
+```ts
+// Find by primary key (returns undefined if missing)
+const post = await Post.find(1);
+
+// Find or throw NotFoundException
+const post = await Post.findOrFail(1);
+
+// All rows
+const all = await Post.all();
+
+// Create and persist
+const post = await Post.create({ title: 'Hello', body: '...', userId: 1 });
+```
+
+## Instance methods
+
+```ts
+const post = await Post.findOrFail(1);
+
+post.title = 'Updated title';
+await post.save();
+
+await post.delete();
+
+const plain = post.toJSON();
+```
+
+## Query builder
+
+For complex queries, use `Post.query()`:
+
+```ts
+const recent = await Post.query()
+  .where(eq(posts.userId, userId))
+  .orderBy(desc(posts.createdAt))
+  .limit(10);
+```
+
+`Post.query()` returns a Drizzle `select` builder scoped to the model's table — full Drizzle API is available.
+
+## Relations
+
+```ts title="app/Models/User.ts"
+import { Model } from '@fyron/core/database';
+import { HasMany } from '@fyron/core/database';
+import { users } from '../../database/schema/users.js';
+import { posts } from '../../database/schema/posts.js';
+
+export class User extends Model {
+  static table = users;
+
+  posts() {
+    return new HasMany(this, posts, 'userId');
+  }
+}
+```
+
+```ts
+const user = await User.findOrFail(1);
+const userPosts = await user.posts().get();
+```
+
+Available relation types: `HasMany`, `HasOne`, `BelongsTo`.
+
+## Migrations
+
+Generate a migration file:
+
+```bash
+pnpm fyron make:migration create_posts_table
+```
+
+Run pending migrations:
+
+```bash
+pnpm fyron migrate
+```
+
+Migrations delegate to `drizzle-kit` under the hood — your `drizzle.config.ts` must be present in the project root.
+
+## Raw access
+
+```ts
+import { app } from '@fyron/core/support';
+
+const db = app().db();  // Drizzle database instance
+```

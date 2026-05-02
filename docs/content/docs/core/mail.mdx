@@ -1,0 +1,80 @@
+---
+title: Mail
+description: Send email via nodemailer with Handlebars templates.
+---
+
+## Configuration
+
+```ts title="config/mail.ts"
+export const mail = {
+  transport: process.env.MAIL_TRANSPORT ?? 'json',  // 'smtp' | 'json' | 'stream' | 'sendmail'
+  from: process.env.MAIL_FROM ?? 'noreply@example.com',
+  host: process.env.MAIL_HOST,
+  port: Number(process.env.MAIL_PORT ?? 587),
+  user: process.env.MAIL_USER,
+  pass: process.env.MAIL_PASS,
+};
+```
+
+```ts title="bootstrap/app.ts"
+app.withConfig({ mail });
+```
+
+Set `MAIL_TRANSPORT=json` during development — emails are logged to the console, not sent.
+
+## Creating a Mailable
+
+```bash
+pnpm fyron make:mail WelcomeMail
+```
+
+This generates:
+- `app/Mail/WelcomeMail.ts`
+- `resources/mail/welcome-mail.hbs`
+
+```ts title="app/Mail/WelcomeMail.ts"
+import { Mailable } from '@fyron/core/mail';
+
+export class WelcomeMail extends Mailable {
+  constructor(private name: string) {
+    super();
+  }
+
+  build() {
+    return this
+      .subject('Welcome to the app!')
+      .template('welcome-mail')
+      .with({ name: this.name });
+  }
+}
+```
+
+## Handlebars template
+
+```hbs title="resources/mail/welcome-mail.hbs"
+<!DOCTYPE html>
+<html>
+<body>
+  <h1>Hi {{name}},</h1>
+  <p>Welcome to the app! We're glad you're here.</p>
+</body>
+</html>
+```
+
+## Sending mail
+
+```ts
+import { Mail } from '@fyron/core/mail';
+import { WelcomeMail } from '../app/Mail/WelcomeMail.js';
+
+await Mail.to('alice@example.com').send(new WelcomeMail('Alice'));
+```
+
+## Transports
+
+| Value | Behaviour |
+|-------|-----------|
+| `smtp` | Standard SMTP via `MAIL_HOST/PORT/USER/PASS` |
+| `json` | Logs the email as JSON — useful for testing |
+| `stream` | Writes to a stream (testing) |
+| `sendmail` | System sendmail binary |

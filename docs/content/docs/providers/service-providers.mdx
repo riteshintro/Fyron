@@ -1,0 +1,81 @@
+---
+title: Service Providers
+description: Extend the framework by writing custom service providers.
+---
+
+Service providers are the backbone of Fyron's boot lifecycle. Every built-in subsystem (HTTP, database, auth, mail, scheduler) is wired through a provider. You can add your own to register services into the DI container and run setup logic at boot time.
+
+## Anatomy of a provider
+
+```ts title="app/Providers/RedisServiceProvider.ts"
+import { ServiceProvider } from '@fyron/core';
+import { createClient } from 'redis';
+
+export class RedisServiceProvider extends ServiceProvider {
+  register(): void {
+    // Bind factories/instances — DI container is ready here, but
+    // other providers may not have booted yet.
+    this.app.container.bind('redis', () =>
+      createClient({ url: process.env.REDIS_URL }),
+    );
+  }
+
+  async boot(): Promise<void> {
+    // All providers have registered — safe to resolve & connect.
+    const client = this.app.container.resolve<ReturnType<typeof createClient>>('redis');
+    await client.connect();
+    this.app.onShutdown(() => client.quit());
+  }
+}
+```
+
+## Registering providers
+
+```ts title="bootstrap/app.ts"
+import { RedisServiceProvider } from '../app/Providers/RedisServiceProvider.js';
+
+app.withProviders([RedisServiceProvider]);
+```
+
+User providers run **after** all built-ins by default.
+
+## Inserting before/after a built-in
+
+```ts
+import { DatabaseServiceProvider } from '@fyron/core';
+
+// Run your provider right before the database boots
+app.withProvidersBefore(DatabaseServiceProvider, [TenantServiceProvider]);
+
+// Run after database, before auth
+app.withProvidersAfter(DatabaseServiceProvider, [CacheServiceProvider]);
+```
+
+## Removing a built-in
+
+```ts
+import { MailServiceProvider } from '@fyron/core';
+
+app.withoutBuiltIn(MailServiceProvider);
+```
+
+## Boot lifecycle order
+
+1. `register()` — all providers in order
+2. `boot()` — all providers in order
+3. Early middleware applied
+4. Routes loaded
+5. Route compiler compiles Fastify routes
+6. Schedule loader runs
+7. App is ready
+
+The separation between `register` and `boot` means that during `boot()` you can safely resolve anything bound during any `register()`.
+
+## Resolving from the container
+
+```ts
+// Inside a route or anywhere after boot
+import { app } from '@fyron/core/support';
+
+const redis = app().container.resolve<RedisClient>('redis');
+```

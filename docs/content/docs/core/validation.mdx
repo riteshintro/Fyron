@@ -1,0 +1,74 @@
+---
+title: Validation
+description: Zod-powered request validation via validate() middleware and FormRequest classes.
+---
+
+## Inline validation
+
+Use `validate()` as route middleware to validate `req.body` against a Zod schema:
+
+```ts
+import { Route } from '@fyron/core/routing';
+import { validate } from '@fyron/core/validation';
+import { z } from 'zod';
+
+const schema = z.object({
+  title: z.string().min(1).max(200),
+  body:  z.string().min(1),
+});
+
+Route.post('/posts', validate(schema), async (req) => {
+  // req.body is typed as { title: string; body: string }
+  return Post.create(req.body);
+});
+```
+
+Validation failures automatically return `422 Unprocessable Entity` with field-level error messages.
+
+## FormRequest classes
+
+For reusable validation with optional authorization:
+
+```ts title="app/Http/Requests/StorePostRequest.ts"
+import { FormRequest } from '@fyron/core/validation';
+import { z } from 'zod';
+
+export class StorePostRequest extends FormRequest {
+  schema = z.object({
+    title: z.string().min(1).max(200),
+    body:  z.string().min(1),
+  });
+
+  async authorize(): Promise<boolean> {
+    // return false to send 403 Forbidden
+    return true;
+  }
+}
+```
+
+Use in a route:
+
+```ts
+import { StorePostRequest } from '../Http/Requests/StorePostRequest.js';
+
+Route.post('/posts', StorePostRequest, async (req) => {
+  return Post.create(req.body);
+});
+```
+
+## Error response format
+
+```json
+{
+  "statusCode": 422,
+  "message": "Validation failed",
+  "errors": {
+    "title": ["String must contain at least 1 character(s)"],
+    "body": ["Required"]
+  }
+}
+```
+
+## Zod version
+
+Fyron uses Zod 4. Import `z` from `zod` as usual — no wrapper needed.

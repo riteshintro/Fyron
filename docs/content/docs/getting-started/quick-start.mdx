@@ -1,0 +1,91 @@
+---
+title: Quick Start
+description: Build a running JSON API in five minutes.
+---
+
+## 1. Scaffold the project
+
+```bash
+npm create fyron-app@latest blog-api
+cd blog-api
+pnpm install
+cp .env.example .env   # set DATABASE_URL
+```
+
+## 2. Define a schema
+
+```ts title="database/schema/posts.ts"
+import { pgTable, serial, text, timestamp } from 'drizzle-orm/pg-core';
+
+export const posts = pgTable('posts', {
+  id: serial('id').primaryKey(),
+  title: text('title').notNull(),
+  body: text('body').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+});
+```
+
+## 3. Generate and run migrations
+
+```bash
+pnpm fyron make:migration create_posts_table
+pnpm fyron migrate
+```
+
+## 4. Create a model
+
+```ts title="app/Models/Post.ts"
+import { Model } from '@fyron/core/database';
+import { posts } from '../../database/schema/posts.js';
+
+export class Post extends Model {
+  static table = posts;
+}
+```
+
+## 5. Add a route
+
+```ts title="routes/api.ts"
+import { Route } from '@fyron/core/routing';
+import { Post } from '../app/Models/Post.js';
+
+Route.get('/posts', async () => {
+  return Post.all();
+});
+
+Route.get('/posts/:id', async (req) => {
+  return Post.findOrFail(Number(req.params.id));
+});
+
+Route.post('/posts', async (req) => {
+  return Post.create(req.body as { title: string; body: string });
+});
+```
+
+## 6. Bootstrap the app
+
+```ts title="bootstrap/app.ts"
+import 'reflect-metadata';
+import { Application } from '@fyron/core';
+import { config } from './config/app.js';
+
+const app = new Application();
+
+app
+  .withConfig(config)
+  .loadRoutesFrom(() => import('../routes/api.js'));
+
+export default app;
+```
+
+## 7. Run
+
+```bash
+pnpm fyron serve
+# Listening on http://127.0.0.1:8000
+```
+
+```bash
+curl http://localhost:8000/posts
+# []
+```

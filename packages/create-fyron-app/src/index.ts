@@ -1,14 +1,22 @@
-import { resolve } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { dirname, resolve } from 'node:path';
 import { cac } from 'cac';
 import pc from 'picocolors';
 import { scaffold } from './scaffold.js';
+
+const pkgDir = dirname(fileURLToPath(import.meta.url));
+const { version } = JSON.parse(
+  readFileSync(resolve(pkgDir, '..', 'package.json'), 'utf8'),
+) as { version: string };
+const defaultVersion = `^${version}`;
 
 const cli = cac('create-fyron-app');
 
 cli
   .command('[name]', 'Create a new fyron application')
-  .option('--core-version <v>', 'fyron core version', { default: '^0.0.1' })
-  .option('--cli-version <v>', '@fyron/cli version', { default: '^0.0.1' })
+  .option('--core-version <v>', 'fyron core version', { default: defaultVersion })
+  .option('--cli-version <v>', '@fyron/cli version', { default: defaultVersion })
   .action(async (name: string | undefined, opts: { coreVersion?: string; cliVersion?: string }) => {
     const projectName = name ?? 'my-fyron-app';
     const targetDir = resolve(process.cwd(), projectName);
@@ -29,5 +37,5 @@ cli
   });
 
 cli.help();
-cli.version('0.0.1');
+cli.version(version);
 cli.parse();

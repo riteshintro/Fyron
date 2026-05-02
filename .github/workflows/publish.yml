@@ -1,8 +1,8 @@
-name: publish
+name: release
 
 on:
   push:
-    tags: ['v*']
+    branches: [main]
   workflow_dispatch:
     inputs:
       dry_run:
@@ -10,13 +10,17 @@ on:
         type: boolean
         default: false
 
+concurrency: ${{ github.workflow }}-${{ github.ref }}
+
 jobs:
-  publish:
+  release:
+    name: Release
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 30
     permissions:
-      contents: read
-      id-token: write   # for npm provenance
+      contents: write
+      pull-requests: write
+      id-token: write
     steps:
       - uses: actions/checkout@v4
         with:
@@ -41,42 +45,26 @@ jobs:
       - name: Approve build scripts
         run: pnpm rebuild esbuild @swc/core
 
-      - name: Build
-        run: pnpm -r build
-
-      - name: Typecheck
-        run: pnpm -r typecheck
-
-      - name: Test
-        run: pnpm -r test
-
-      - name: Publish @fyron/core
-        if: ${{ !inputs.dry_run }}
-        run: pnpm publish --access public --no-git-checks --provenance
-        working-directory: packages/core
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish @fyron/cli
-        if: ${{ !inputs.dry_run }}
-        run: pnpm publish --access public --no-git-checks --provenance
-        working-directory: packages/cli
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Publish create-fyron-app
-        if: ${{ !inputs.dry_run }}
-        run: pnpm publish --access public --no-git-checks --provenance
-        working-directory: packages/create-fyron-app
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
-
-      - name: Dry-run summary
+      - name: Create Release PR or Publish (dry run)
         if: ${{ inputs.dry_run }}
         run: |
-          echo "Dry run — would have published:"
+          echo "Dry run — changesets status:"
+          pnpm changeset status
+          echo "Packages that would be published:"
           for pkg in packages/core packages/cli packages/create-fyron-app; do
             name=$(node -p "require('./$pkg/package.json').name")
             ver=$(node -p "require('./$pkg/package.json').version")
             echo "  $name@$ver"
           done
+
+      - name: Create Release PR or Publish
+        if: ${{ !inputs.dry_run }}
+        uses: changesets/action@v1
+        with:
+          publish: pnpm release
+          version: pnpm version-packages
+          commit: "chore: release packages"
+          title: "chore: release packages"
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
