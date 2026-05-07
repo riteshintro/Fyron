@@ -31,7 +31,7 @@ DATABASE_URL=postgresql://user:pass@localhost:5432/mydb
 Install both packages:
 
 ```bash
-pnpm add @fyron/core @fyron/cli
+pnpm add @fyron/core @fyron/cli drizzle-orm
 pnpm add -D typescript tsx drizzle-kit @types/node
 ```
 
@@ -55,4 +55,4 @@ Your `tsconfig.json` must enable decorator metadata:
 
 ## Peer dependencies
 
-`@fyron/cli` expects `drizzle-orm` and `handlebars` to be present (they come transitively via `@fyron/core`). No extra install needed.
+`@fyron/core` and `@fyron/cli` expect `drizzle-orm` to be present in your app. The scaffold installs it by default.

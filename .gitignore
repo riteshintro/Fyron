@@ -10,3 +10,5 @@ dist/
 coverage/
 .vitest-cache/
 *.tsbuildinfo
+docs/.next/
+docs/next-env.d.ts

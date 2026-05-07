@@ -27,7 +27,7 @@ pnpm fyron serve             # → http://127.0.0.1:8000
 ## Install in an existing project
 
 ```bash
-pnpm add @fyron/core
+pnpm add @fyron/core drizzle-orm
 pnpm add -D @fyron/cli tsx drizzle-kit
 ```
 

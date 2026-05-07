@@ -19,7 +19,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `Application.withProvidersAfter(target, providers)` — insert custom providers after a specific built-in
 - SIGTERM / SIGINT handlers auto-wired in `Application.listen()` for graceful shutdown
 - `sideEffects: false` in `@fyron/core` package.json for tree-shaking support
-- `drizzle-orm` and `handlebars` declared as `peerDependencies` in `@fyron/cli` (already transitively available via `@fyron/core`)
+- `drizzle-orm` and `handlebars` declared as `peerDependencies` in `@fyron/cli`
+- `drizzle-orm` moved to `peerDependencies` in `@fyron/core` (scaffolded apps still install it by default)
 - CI matrix now tests Node 20 and Node 22
 - `create-fyron-app` reads its own version at runtime so scaffolded projects always reference the correct package versions
 
